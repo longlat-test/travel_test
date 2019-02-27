@@ -8,11 +8,17 @@ class ProfileSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ('user', 'details')
+        fields = ('user', 'details' )
+class MyProfileSerializers(serializers.ModelSerializer):
+
+
+    class Meta:
+        model = Profile
+        fields = ('details', )
 
 class ProfilePostSerializers(serializers.ModelSerializer):
 
 
     class Meta:
         model = Profile
-        fields = ('user')
+        fields = ('details', )
