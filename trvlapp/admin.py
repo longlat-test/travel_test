@@ -1,11 +1,12 @@
 from django.contrib import admin
 
-from .models import Profile
+from .models import Profile, Folowers
 
 class ProfileAdmin(admin.ModelAdmin):
 
-    list_display = ('user', 'details')
-admin.site.register(Profile, ProfileAdmin)    
+    list_display = ('full_name', 'user', 'status', 'location', 'image', )
+admin.site.register(Profile, ProfileAdmin )
+admin.site.register(Folowers)
 
 
 

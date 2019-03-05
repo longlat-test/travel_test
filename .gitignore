@@ -5,3 +5,7 @@ myvenv
 db.sqlite3
 /static
 .DS_Store
+LTravel-API
+mydatabase
+/media
+trvlapp/migrations
