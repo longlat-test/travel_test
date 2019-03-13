@@ -9,3 +9,5 @@ LTravel-API
 mydatabase
 /media
 trvlapp/migrations
+/travel_vue
+/node_modules
