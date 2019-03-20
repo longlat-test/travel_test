@@ -6,6 +6,8 @@ from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.utils.translation import ugettext_lazy as _
+from djmoney.models.fields import MoneyField
+from django.db import models
 
 
 #AbstractUser._meta.get_field('email')._unique = True
@@ -84,6 +86,8 @@ class Profile(models.Model):
     birthday = models.DateField(null=True, blank=True)
     image = models.ImageField(upload_to='Images', default='Images/None/No-ing.jpg', verbose_name='Изображение')
     background = models.ImageField(upload_to='background', default='Images/None/No-ing.jpg', verbose_name='Задний фон')
+    profile_currency = models.CharField(verbose_name='Валюта пользователя', default='USD', max_length=10)
+    profile_raiting = models.IntegerField(default=0)
     class Meta:
         verbose_name = "Пользователь"
 
@@ -103,9 +107,12 @@ class Folowers(models.Model):
 
     class Meta:
         verbose_name = "Подписчики/Подписки"
-
+class Tags(models.Model):
+    #event_id = models.ForeignKey(Event, on_delete=models.CASCADE, default=None)
+    tag_id = models.AutoField(primary_key=True)
+    name = models.CharField(verbose_name='тег', blank=True, null=True, max_length=30)
 class Event(models.Model):
-    event_id = budget = models.AutoField(primary_key=True)
+    event_id = models.AutoField(primary_key=True)
     author = models.ForeignKey(Profile, verbose_name='Автор', on_delete=models.CASCADE)
     name = models.CharField(verbose_name='Название события', max_length=20)
     image = image = models.ImageField(upload_to='Images/Evenimage', default='Images/None/No-ing.jpg', verbose_name='Изображение события', blank=True, null=True)
@@ -113,6 +120,10 @@ class Event(models.Model):
     budget = models.IntegerField(verbose_name='Бюджет')
     date = models.DateTimeField(blank=True, null=True)
     published_date = models.DateTimeField(blank=True, null=True)
+    event_raiting = models.IntegerField(default=0)
+    balance = MoneyField(max_digits=14, decimal_places=0, default_currency='USD')
+    profile_balance = models.IntegerField(null=True, blank=True)
+    tags = models.ManyToManyField(Tags, related_name='теги', null=True)
 
     def publish(self):
         self.published_date = timezone.now()
@@ -120,6 +131,24 @@ class Event(models.Model):
 
     class Meta:
         verbose_name = "События"
+
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
+    hash_id = models.CharField(max_length=10, unique=True, blank=True, null=True)
+    create_data = models.DateTimeField(blank=True, null=True)
+
+
+class Comments(models.Model):
+    event_id = models.ForeignKey(Event, on_delete=models.CASCADE)
+    text = models.TextField(verbose_name='Текст комментарий', max_length=50, default=None, blank=True, null=True)
+
+
+
+
+
+
+
+
 
 
 
