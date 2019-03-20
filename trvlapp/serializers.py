@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Profile, Folowers, Event, User
+from .models import Profile, Folowers, Event, User, Comments
 from djoser.serializers import UserCreateSerializer as BaseUserRegistrationSerializer
 
 
@@ -23,7 +23,7 @@ class ProfilePostSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ('status', )
+        fields = ('status', 'full_name' )
 class ProfileFotoSerializers(serializers.ModelSerializer):
 
 
@@ -56,10 +56,27 @@ class EventGetSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = ('author', 'name', 'budget', 'image', 'location', 'date', 'event_id' )
+        fields = ('author', 'name', 'budget', 'image', 'location', 'date', 'event_id', 'balance_currency', 'balance', 'profile_balance' )
 class EventPutSerializers(serializers.ModelSerializer):
 
 
     class Meta:
         model = Event
         fields = ('name', 'budget', 'event_id' )
+class UserActivateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('email', )
+
+class AddCommentSerialer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Comments
+        fields = ('event_id', 'text')
+class EventBalanceSerializers(serializers.ModelSerializer):
+
+
+    class Meta:
+        model = Event
+        fields = ('profile_balance', )
