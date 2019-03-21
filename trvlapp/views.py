@@ -198,18 +198,21 @@ class Signup(APIView):
     permission_classes = [permissions.IsAuthenticated, ]
 
     def post(self, request):
-        user = get_object_or_404(User, email=request.user)
-        mail_subject = 'Activate your account.'
-        current_site = get_current_site(request)
-        uid = urlsafe_base64_encode(force_bytes(user.pk)).decode()
-        token = account_activation_token.make_token(user)
-        print(token)
-        activation_link = "{0}api/activated/{1}/{2}".format(current_site, uid, token)
-        message = "Hello {0},\n {1}".format(user.email, activation_link)
-        email = EmailMessage(mail_subject, message, to=[user.email])
-        email.send()
-
-        return Response('Please confirm your email address to complete the registration')
+        profile = get_object_or_404(Profile, user=request.user)
+        if profile.active == False:
+           user = get_object_or_404(User, email=request.user)
+           mail_subject = 'Activate your account.'
+           current_site = get_current_site(request)
+           uid = urlsafe_base64_encode(force_bytes(user.pk)).decode()
+           token = account_activation_token.make_token(user)
+           print(token)
+           activation_link = "{0}api/activated/{1}/{2}".format(current_site, uid, token)
+           message = "Hello {0},\n {1}".format(user.email, activation_link)
+           email = EmailMessage(mail_subject, message, to=[user.email])
+           email.send()
+           return Response('Please confirm your email address to complete the registration')
+        else:
+           return Response('Ваш аккаунт уже активирован')
 
 class Activate(APIView):
     permission_classes = [permissions.IsAuthenticated, ]
@@ -228,8 +231,11 @@ class Activate(APIView):
             user = None
 
         if user is not None and account_activation_token.check_token(user, token):
+            profile = get_object_or_404(Profile, user=user)
+            print(request.user)
             # activate user and login:
-            #user.is_active = True
+            profile.active = True
+            profile.save()
             #user.save()
             #login(request, user)
             return HttpResponse('активация прошла успешно')
@@ -266,27 +272,21 @@ class ForgotPassword(APIView):
     permission_classes = [permissions.AllowAny, ]
 
     def post(self, request):
-        user = get_object_or_404(User, email=request.data['email'])
-        mail_subject = 'Ваш код изменения пароля'
-
 
         try:
             user = get_object_or_404(User, email=request.data['email'])
-            mail_subject = 'Ваш код изменения пароля'
+            mail_subject = 'Ваш новый временный пароль'
 
-            snippet = PasswordResetToken.objects.get(user=request.data['user'])
+            snippet = PasswordResetToken.objects.get(user=user)
             hash = hashlib.sha1()
             activation_number = str(random.randint(100000, 999999))
             activation_number1 = activation_number.encode('utf-8')
-            h = hashlib.md5(activation_number1).hexdigest()
-            print(h)
-            snippet.hash_id = h
-            now = datetime.now()
-            five_minute = timedelta(minutes=5)
-            next_time = now + five_minute
-            snippet.create_data = next_time
-            snippet.save()
-            print(activation_number)
+            print(activation_number1)
+            #h = hashlib.md5(activation_number1).hexdigest()
+            user.set_password(activation_number)
+            user.save()
+
+            #print(activation_number)
             message = "Hello {0},\n {1}".format(user.email, activation_number)
             email = EmailMessage(mail_subject, message, to=[user.email])
             email.send()
@@ -300,11 +300,18 @@ class AddComment(APIView):
     def post(self, request):
         snippet = AddCommentSerialer(data=request.data)
         if snippet.is_valid():
-           snippet.save()
+           snippet.save(authors=request.user)
            #print(serializer.data)
            return Response("добавлено")
         else:
            return Response("Не добавлено")
+
+# class Tags(generics.ListAPIView):
+#     permission_classes = [permissions.IsAuthenticated, ] # получения списка тегов
+#     serializer_class = ProfileSerializers
+#     queryset = Profile.objects.all()
+#     filter_backends = (DjangoFilterBackend, )
+#     filter_fields = ('location', )
 
 
 # class ResetPassword(APIView):

@@ -8,6 +8,7 @@ from django.contrib.auth.models import PermissionsMixin
 from django.utils.translation import ugettext_lazy as _
 from djmoney.models.fields import MoneyField
 from django.db import models
+from django.core.validators import RegexValidator
 
 
 #AbstractUser._meta.get_field('email')._unique = True
@@ -77,17 +78,21 @@ class Profile(models.Model):
         ('m',u"мужской"),
         ('w',u"женский"),
     )
+    alphanumeric = RegexValidator(r'^[0-9a-zA-Z]*$', 'Only alphanumeric characters are allowed.')
 
+    name = models.CharField(max_length=50, blank=True, null=True, validators=[alphanumeric])
     full_name = models.CharField(verbose_name='Имя и фамилия', max_length=25, default=None, blank=True, null=True)
     user = models.OneToOneField(User, verbose_name='Юзер', on_delete=models.CASCADE)
     sex = models.CharField(max_length=1,verbose_name=u"пол",choices=SEX_CHOICES, default=None, blank=True, null=True)
     status = models.CharField(verbose_name='Статус', max_length=20, default=None, blank=True, null=True)
-    location = models.CharField(verbose_name='Город', max_length=20, default=None, blank=True, null=True)
+    place_id = models.CharField(verbose_name='айди города', max_length=100, default=None, blank=True, null=True)
+    location = models.CharField(verbose_name='Город', max_length=100, default=None, blank=True, null=True)
     birthday = models.DateField(null=True, blank=True)
     image = models.ImageField(upload_to='Images', default='Images/None/No-ing.jpg', verbose_name='Изображение')
     background = models.ImageField(upload_to='background', default='Images/None/No-ing.jpg', verbose_name='Задний фон')
     profile_currency = models.CharField(verbose_name='Валюта пользователя', default='USD', max_length=10)
     profile_raiting = models.IntegerField(default=0)
+    active = models.BooleanField(default=False)
     class Meta:
         verbose_name = "Пользователь"
 
@@ -141,6 +146,7 @@ class PasswordResetToken(models.Model):
 class Comments(models.Model):
     event_id = models.ForeignKey(Event, on_delete=models.CASCADE)
     text = models.TextField(verbose_name='Текст комментарий', max_length=50, default=None, blank=True, null=True)
+    authors = models.ForeignKey(User, on_delete=models.CASCADE, default=None, null=True, blank=True)
 
 
 
