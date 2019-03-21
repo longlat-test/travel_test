@@ -16,14 +16,14 @@ class MyProfileSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ('user', 'full_name', 'sex', 'status', 'location', 'image', 'background', 'age')
+        fields = ('user', 'full_name', 'sex', 'status', 'location', 'image', 'background', 'active')
 
 class ProfilePostSerializers(serializers.ModelSerializer):
 
 
     class Meta:
         model = Profile
-        fields = ('status', 'full_name' )
+        fields = ('status', 'full_name', 'location', 'place_id' )
 class ProfileFotoSerializers(serializers.ModelSerializer):
 
 
@@ -44,7 +44,7 @@ class SnippetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ('status', 'location')
+        fields = ('name', 'status', 'location', 'place_id')
 class EventPostSerializers(serializers.ModelSerializer):
 
 
@@ -73,7 +73,7 @@ class AddCommentSerialer(serializers.ModelSerializer):
 
     class Meta:
         model = Comments
-        fields = ('event_id', 'text')
+        fields = ('event_id', 'text', )
 class EventBalanceSerializers(serializers.ModelSerializer):
 
 
