@@ -11,3 +11,4 @@ mydatabase
 trvlapp/migrations
 /travel_vue
 /node_modules
+/trvlsite/settings.py
