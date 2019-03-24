@@ -80,3 +80,9 @@ class EventBalanceSerializers(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = ('profile_balance', )
+class FolowersPostSerializers(serializers.ModelSerializer):
+
+
+    class Meta:
+        model = Folowers
+        fields = ('folowing_id',  )

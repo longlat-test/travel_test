@@ -19,8 +19,14 @@ from django.conf.urls.static import static
 from django.conf import settings
 from rest_framework_swagger.views import get_swagger_view
 from rest_framework.documentation import include_docs_urls
+from rest_framework_swagger import renderers
+from rest_framework.schemas import get_schema_view
 
-schema_view = get_swagger_view(title='API')
+#class JSONOpenAPIRenderer(renderers.OpenAPIRenderer):
+#    media_type = 'application/vdn.name.v1+json'
+
+
+schema_view = get_swagger_view(title='Longlat Travel')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,7 +34,7 @@ urlpatterns = [
     path('', schema_view),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
-    path('auth/', include('djoser.urls.jwt')),
+#    path('auth/', include('djoser.urls.jwt')),
     path('docs/', include_docs_urls(title='My API title'))
 
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -29,10 +29,11 @@ from django.contrib.auth import get_user_model, login
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .tokens import account_activation_token
-from .serializers import ProfileSerializers, ProfilePostSerializers, MyProfileSerializers, ProfileFotoSerializers, ProfileSubscribeSerializers, SnippetSerializer, EventPostSerializers, EventGetSerializers, EventPutSerializers, UserActivateSerializer, AddCommentSerialer, EventBalanceSerializers
+from rest_framework.decorators import api_view, renderer_classes
+from .serializers import ProfileSerializers, ProfilePostSerializers, MyProfileSerializers, ProfileFotoSerializers, ProfileSubscribeSerializers, SnippetSerializer, EventPostSerializers, EventGetSerializers, EventPutSerializers, UserActivateSerializer, AddCommentSerialer, EventBalanceSerializers, FolowersPostSerializers
 
-class ProfileView(APIView):   #вьешка для получения пользователя по айди
-
+class ProfileView(generics.GenericAPIView):   #вьешка для получения пользователя по айди
+    serializer_class = ProfileSerializers
     permission_classes = [permissions.AllowAny, ]
 
     def get(self, request):
@@ -41,11 +42,12 @@ class ProfileView(APIView):   #вьешка для получения польз
         print(request.data['user'])
         serializer = ProfileSerializers(profile, many=True)
         print(serializer)
-        return Response(serializer.data)
+        return JsonResponse(serializer.data, safe=False)
 
-class MyProfileView(APIView): #вьюшка для получения текущего пользователя
-
+class MyProfileView(generics.GenericAPIView): #вьюшка для получения текущего пользователя
+    serializer_class = MyProfileSerializers
     permission_classes = [permissions.IsAuthenticated, ]
+    #schema = CustomViewSchema()
 
     def get(self, request):
         profile = Profile.objects.filter(user=request.user)
@@ -57,29 +59,46 @@ class GetSubscribe(APIView):  #вью подписчиков/подписок
 
     def get(self, request):   #получение подписок
         profiles = Folowers.objects.filter(users_id=request.user).values('folowing_id')
-        print(profiles)
         folowers = Profile.objects.filter(user__in=profiles)
-        print(folowers)
         serializer = ProfileSerializers(folowers, many=True)
 
         return JsonResponse(serializer.data, safe=False)
 
     def put(self, request, *arg):  #добавление подписок
         snippet = Folowers.objects.get(users_id=request.user)
+        snippet1 = Folowers.objects.get(users_id=request.data['folowing_id'])
+
         serializer = ProfileSubscribeSerializers(snippet, data=request.data)
         if serializer.is_valid():
            snippet.folowing_id.add(request.data['folowing_id'])
-           print(serializer.data)
+           snippet1.folowers_id.add(request.user)
            return Response("добавлено")
         else:
            return Response("Не добавлено")
-class DetailsPost(APIView):  #создание модели Profile
+    def post(self, request, *arg):
+        #details = request.data.get("details")
 
+           status = FolowersPostSerializers(data=request.data)
+           print(status)
+           if status.is_valid():
+              status.save(users_id=request.user)
+              return Response("Добавлено")
+           else:
+              return Response("Не добавлено")
+        #except:
+            #return Response("Такой пользователь уже существует")
+
+#@renderer_classes([renderers.SwaggerUIRenderer,renderers.JSONRenderer])
+class DetailsPost(generics.GenericAPIView):  #создание модели Profile
+    serializer_class = ProfilePostSerializers
     permission_classes = [permissions.IsAuthenticated, ]
 
     def post(self, request, *arg):
         #details = request.data.get("details")
         try:
+           folowers = FolowersPostSerializers(data=request.data)
+           if folowers.is_valid():
+              folowers.save(users_id=request.user)
            status = ProfilePostSerializers(data=request.data)
            print(status)
            if status.is_valid():
@@ -87,10 +106,11 @@ class DetailsPost(APIView):  #создание модели Profile
               return Response("Добавлено")
            else:
               return Response("Не добавлено")
+
         except:
             return Response("Такой пользователь уже существует")
-class UpdateProfile(APIView): #вьюшка обновления данных пользователя
-
+class UpdateProfile(generics.GenericAPIView): #вьюшка обновления данных пользователя
+    serializer_class = SnippetSerializer
     permission_classes = [permissions.IsAuthenticated, ]
 
     def put(self, request, *arg):
@@ -99,7 +119,7 @@ class UpdateProfile(APIView): #вьюшка обновления данных п
         print(serializer)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return JsonResponse(serializer.data)
         return Response(serializer.errors)
 
 
@@ -126,37 +146,41 @@ class ListView(generics.ListAPIView):
     queryset = Profile.objects.all()
     filter_backends = (DjangoFilterBackend, )
     filter_fields = ('location', )
-class EventCRUD(APIView):  #создание модели Event
+class EventCRUD(generics.GenericAPIView):  #создание модели Event
 
     permission_classes = [permissions.IsAuthenticated, ]
+    serializer_class = EventGetSerializers
+    serializer_class = EventPostSerializers
 
     def get(self, request):
+
         author = get_object_or_404(Profile, user=request.user)
-        profile_currency = author.profile_currency #получение события
+
+        profile_currency = author.profile_currency
+         #получение события
         profile = Event.objects.filter(author=author)
         serializer = EventGetSerializers(profile, many=True)
         get_json = requests.get(
              'https://www.cbr-xml-daily.ru/daily_json.js'
         )
-
         data = get_json.json()
         mylist = []
 
         profile_valuet = data['Valute'][profile_currency]['Value']
-        print(int(serializer.data[0]['balance']))
+        print(serializer.data)
         profile_valuet = profile_valuet * int(serializer.data[0]['balance'])
         for profile in profile:
 
             profile.profile_balance = profile_valuet
             profile.save()
         print(profile.profile_balance)
-        #mylist.append(str(profile_valuet))
-        #mylist = { 'profile_balance' : mylist}
-        #serializer1 = EventBalanceSerializers(profile, data=mylist, many=True)
-        #print(serializer1)
-        #if serializer1.is_valid():
-           #serializer1.save()
-          # print(serializer1)
+        mylist.append(str(profile_valuet))
+        mylist = { 'profile_balance' : mylist}
+        serializer1 = EventBalanceSerializers(profile, data=mylist, many=True)
+        print(serializer1)
+        if serializer1.is_valid():
+           serializer1.save()
+           print(serializer1)
         return Response(serializer.data  )
 
     def post(self, request, *arg):
@@ -217,11 +241,11 @@ class Signup(APIView):
 class Activate(APIView):
     permission_classes = [permissions.IsAuthenticated, ]
     #User = get_user_model()
-    print(User)
+
     def get(self, request, uidb64, token):
         uid = urlsafe_base64_decode(uidb64).decode()
         user = User.objects.get(id=uid)
-        print(user)
+
         try:
             uid = force_text(urlsafe_base64_decode(uidb64))
             user = User.objects.get(id=uid)
@@ -294,9 +318,9 @@ class ForgotPassword(APIView):
             return Response('Please confirm your email address to complete the registration')
         except:
             return Response('нет такого емайла')
-class AddComment(APIView):
+class AddComment(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated, ]
-
+    serializer_class = AddCommentSerialer
     def post(self, request):
         snippet = AddCommentSerialer(data=request.data)
         if snippet.is_valid():
@@ -305,6 +329,9 @@ class AddComment(APIView):
            return Response("добавлено")
         else:
            return Response("Не добавлено")
+
+
+
 
 # class Tags(generics.ListAPIView):
 #     permission_classes = [permissions.IsAuthenticated, ] # получения списка тегов
