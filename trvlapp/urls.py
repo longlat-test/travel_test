@@ -1,5 +1,8 @@
 from django.urls import path
+from rest_framework_swagger.views import get_swagger_view
 from .views import ProfileView, MyProfileView, DetailsPost, ApiFoto, GetSubscribe, UpdateProfile, ListView, EventCRUD, Signup, Activate, Valuet, ForgotPassword, AddComment
+
+
 
 urlpatterns = [
     path('getprofile/', ProfileView.as_view()),

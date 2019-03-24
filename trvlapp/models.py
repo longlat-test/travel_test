@@ -25,7 +25,7 @@ class MyUserManager(BaseUserManager):
         """
         if not email:
             raise ValueError('The Email must be set')
-        username = ''
+        #username = ''
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
@@ -99,7 +99,11 @@ class Profile(models.Model):
 
     def age(self):
         import datetime
-        return int((datetime.date.today() - self.birthday).days / 365.25  )
+        if self.birthday == "Null":
+
+           return int((datetime.date.today() - self.birthday).days / 365.25  )
+        else:
+           return (0)
     age = property(age)
 
 
@@ -107,8 +111,8 @@ class Profile(models.Model):
 
 class Folowers(models.Model):
     users_id = models.OneToOneField(User, verbose_name='Пользователь', on_delete=models.CASCADE)
-    folowers_id = models.ManyToManyField(User, related_name='Подписчики', null=True)
-    folowing_id = models.ManyToManyField(User, related_name='Подписки', null=True)
+    folowers_id = models.ManyToManyField(User, related_name='Подписчики', null=True, blank=True)
+    folowing_id = models.ManyToManyField(User, related_name='Подписки', null=True, blank=True)
 
     class Meta:
         verbose_name = "Подписчики/Подписки"
